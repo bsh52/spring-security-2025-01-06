@@ -2,7 +2,6 @@ package com.ll.security_2025_01_06.global.rq;
 
 import com.ll.security_2025_01_06.domain.member.member.entity.Member;
 import com.ll.security_2025_01_06.domain.member.member.service.MemberService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,7 +20,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class Rq {
-    private final HttpServletRequest request;
     private final MemberService memberService;
 
     public void setLogin(String username) {
@@ -45,11 +43,11 @@ public class Rq {
 
         Authentication authentication = context.getAuthentication();
 
-        if (authentication != null) {
+        if (authentication == null) {
             return null;
         }
 
-        if (authentication.getPrincipal() != null || authentication.getPrincipal() instanceof String) {
+        if (authentication.getPrincipal() == null || authentication.getPrincipal() instanceof String) {
             return null;
         }
 
