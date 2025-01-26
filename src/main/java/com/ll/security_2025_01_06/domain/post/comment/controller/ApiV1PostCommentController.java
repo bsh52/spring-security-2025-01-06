@@ -45,7 +45,7 @@ public class ApiV1PostCommentController {
             @PathVariable long postId,
             @PathVariable long commentId
     ) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         Post post = postService.findById(postId).orElseThrow(
                 () -> new ServiceException("404-2", "%d번 글은 존재하지 않습니다.".formatted(postId))
@@ -80,7 +80,7 @@ public class ApiV1PostCommentController {
             @PathVariable long commentId,
             @RequestBody @Valid PostCommentModifyReqBody reqBody
     ) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         Post post = postService.findById(postId).orElseThrow(
                 () -> new ServiceException("404-2", "%d번 글은 존재하지 않습니다.".formatted(postId))
@@ -114,7 +114,7 @@ public class ApiV1PostCommentController {
             @PathVariable long postId,
             @RequestBody @Valid PostCommentWriteReqBody reqBody
     ) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         Post post = postService.findById(postId).orElseThrow(
                 () -> new ServiceException("404-2", "%d번 글은 존재하지 않습니다.".formatted(postId))

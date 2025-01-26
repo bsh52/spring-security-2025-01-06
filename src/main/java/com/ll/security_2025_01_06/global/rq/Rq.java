@@ -2,14 +2,18 @@ package com.ll.security_2025_01_06.global.rq;
 
 import com.ll.security_2025_01_06.domain.member.member.entity.Member;
 import com.ll.security_2025_01_06.domain.member.member.service.MemberService;
-import com.ll.security_2025_01_06.global.exceptions.ServiceException;
-import com.ll.security_2025_01_06.standard.util.Ut;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
-import java.util.Optional;
+import java.util.List;
 
 // Request를 추상화한 객체
 // Request, Response, Cookie, Session 등을 다룬다.
@@ -20,23 +24,37 @@ public class Rq {
     private final HttpServletRequest request;
     private final MemberService memberService;
 
-    public Member checkAuthentication() {
-        String credentials = request.getHeader("Authorization");
-        String apiKey = credentials == null ? "" : credentials.substring("Bearer ".length());
+    public void setLogin(String username) {
+        UserDetails user = new User(
+                username,
+                "",
+                List.of()
+        );
 
-        if (Ut.str.isBlank(apiKey)) {
-            throw new ServiceException("401-1", "apiKey를 입력해주세요.");
-        }
-        Optional<Member> opActor = memberService.findByApiKey(apiKey);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user,
+                user.getPassword(),
+                user.getAuthorities()
+        );
 
-        if (opActor.isEmpty()) {
-            throw new ServiceException("401-1", "사용자 인증정보가 올바르지 않습니다.");
-        }
-
-        return opActor.get();
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    public Member getActorByUsername(String username) {
+    public Member getActor() {
+        SecurityContext context = SecurityContextHolder.getContext();
+
+        Authentication authentication = context.getAuthentication();
+
+        if (authentication != null) {
+            return null;
+        }
+
+        if (authentication.getPrincipal() != null || authentication.getPrincipal() instanceof String) {
+            return null;
+        }
+
+        UserDetails user = (UserDetails) authentication.getPrincipal();
+        String username = user.getUsername();
         return memberService.findByUsername(username).get();
     }
 }

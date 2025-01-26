@@ -5,6 +5,7 @@ import com.ll.security_2025_01_06.domain.post.post.dto.PostDto;
 import com.ll.security_2025_01_06.domain.post.post.dto.PostWithContentDto;
 import com.ll.security_2025_01_06.domain.post.post.entity.Post;
 import com.ll.security_2025_01_06.domain.post.post.service.PostService;
+import com.ll.security_2025_01_06.global.exceptions.ServiceException;
 import com.ll.security_2025_01_06.global.rq.Rq;
 import com.ll.security_2025_01_06.global.rsData.RsData;
 import com.ll.security_2025_01_06.standard.page.dto.PageDto;
@@ -12,8 +13,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +31,7 @@ public class ApiV1PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize
     ) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         return new PageDto(
                 postService.findByAuthorPaged(actor, searchKeywordType, searchKeyword, page, pageSize)
@@ -60,7 +59,11 @@ public class ApiV1PostController {
         Post post = postService.findById(id).get();
 
         if (!post.isPublished()) {
-            Member actor = rq.checkAuthentication();
+            Member actor = rq.getActor();
+
+            if (actor == null) {
+                throw new ServiceException("401-1", "로그인이 필요합니다.");
+            }
 
             post.checkActorCanRead(actor);
         }
@@ -84,14 +87,9 @@ public class ApiV1PostController {
     @PostMapping
     @Transactional
     public RsData<PostWithContentDto> write(
-            @RequestBody @Valid PostWriteReqBody reqBody,
-            @AuthenticationPrincipal UserDetails user
+            @RequestBody @Valid PostWriteReqBody reqBody
             ) {
-        Member actor = rq.checkAuthentication();
-
-        if (user != null) {
-            actor = rq.getActorByUsername(user.getUsername());
-        }
+        Member actor = rq.getActor();
 
         Post post = postService.write(
                 actor,
@@ -124,7 +122,7 @@ public class ApiV1PostController {
     @PutMapping("/{id}")
     @Transactional
     public RsData<PostWithContentDto> modify(@PathVariable long id, @RequestBody @Valid PostModifyReqBody reqBody) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         Post post = postService.findById(id).get();
 
@@ -145,7 +143,7 @@ public class ApiV1PostController {
     @DeleteMapping("/{id}")
     @Transactional
     public RsData<Void> delete(@PathVariable long id) {
-        Member actor = rq.checkAuthentication();
+        Member actor = rq.getActor();
 
         Post post = postService.findById(id).get();
 
